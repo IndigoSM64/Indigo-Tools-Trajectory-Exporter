@@ -156,7 +156,7 @@ class CutsceneTrajectoryExport(bpy.types.Operator):
                     sm64_pos_x, sm64_pos_y, sm64_pos_z = transforme_all_trajectory_for_sm64(position[0], position[1], position[2])
         
                     # Add information to output string
-                    string_line = "{" + str(i) + "," + str(round(num_frames)) + ",{ " + sm64_pos_x + "," + sm64_pos_y + "," + sm64_pos_z + "} }\n" 
+                    string_line = "{" + str(i) + "," + str(round(num_frames)) + ",{ " + sm64_pos_x + "," + sm64_pos_y + "," + sm64_pos_z + "} },\n" 
                     output_string.append(string_line)
                                    
                 else:
@@ -202,7 +202,7 @@ class CutsceneTrajectoryExport(bpy.types.Operator):
                     sm64_pos_x, sm64_pos_y, sm64_pos_z = transforme_all_trajectory_for_sm64(position[0], position[1], position[2])
 
                     # Add information to output string
-                    string_line = "{" + str(i) + "," + str(round(num_frames)) + ",{ " + sm64_pos_x + "," + sm64_pos_y + "," + sm64_pos_z + "} }\n" 
+                    string_line = "{" + str(i) + "," + str(round(num_frames)) + ",{ " + sm64_pos_x + "," + sm64_pos_y + "," + sm64_pos_z + "} },\n" 
                     output_focus_string.append(string_line)
                     
                      
