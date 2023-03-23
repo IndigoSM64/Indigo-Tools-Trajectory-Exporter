@@ -12,7 +12,13 @@ def setup_cam_focus():
     
     
 
- 
+def transforme_spline_offset(spline):
+    spline *= 2.86
+    spline = round(spline)
+    return spline
+
+    
+
 
 def transforme_all_trajectory_for_sm64(posx, posy, posz):
                     pos_inter = posy
@@ -153,6 +159,8 @@ class CutsceneTrajectoryExport(bpy.types.Operator):
                     # Compute camera position at keyframe
                     position = [location_fcurves[j].keyframe_points[i].co[1] for j in range(3)]
 
+                    num_frames = transforme_spline_offset(num_frames)
+
                     sm64_pos_x, sm64_pos_y, sm64_pos_z = transforme_all_trajectory_for_sm64(position[0], position[1], position[2])
         
                     # Add information to output string
@@ -167,7 +175,7 @@ class CutsceneTrajectoryExport(bpy.types.Operator):
                     
                     sm64_pos_x, sm64_pos_y, sm64_pos_z = transforme_all_trajectory_for_sm64(position[0], position[1], position[2])
                     
-                    string_line = "{" + str(i) + ",0,{ " + sm64_pos_x + "," + sm64_pos_y + "," + sm64_pos_z + "} }" 
+                    string_line = "{-1,0,{ " + sm64_pos_x + "," + sm64_pos_y + "," + sm64_pos_z + "} }" 
                     output_string.append(string_line)  
                     output_string = "".join(output_string)              
 
@@ -201,6 +209,8 @@ class CutsceneTrajectoryExport(bpy.types.Operator):
 
                     sm64_pos_x, sm64_pos_y, sm64_pos_z = transforme_all_trajectory_for_sm64(position[0], position[1], position[2])
 
+                    num_frames = transforme_spline_offset(num_frames)
+                    
                     # Add information to output string
                     string_line = "{" + str(i) + "," + str(round(num_frames)) + ",{ " + sm64_pos_x + "," + sm64_pos_y + "," + sm64_pos_z + "} },\n" 
                     output_focus_string.append(string_line)
@@ -213,7 +223,7 @@ class CutsceneTrajectoryExport(bpy.types.Operator):
                     sm64_pos_x, sm64_pos_y, sm64_pos_z = transforme_all_trajectory_for_sm64(position[0], position[1], position[2])
 
                     # Add information to output string
-                    string_line = "{" + str(i) + ",0,{ " + sm64_pos_y + "," + sm64_pos_x + "," + sm64_pos_z + "} }\n" 
+                    string_line = "{-1,0,{ " + sm64_pos_x  + "," + sm64_pos_y + "," + sm64_pos_z + "} }\n" 
                     output_focus_string.append(string_line)
                     output_focus_string = "".join(output_focus_string)   
                     
