@@ -23,6 +23,9 @@ class TrajectoryPanel(bpy.types.Panel):
         row.operator("wm.trajectory_spawn", text="Trajectory point spawn")
         
         row = layout.row()
+        row.prop(context.scene, "indigo_mod")
+        
+        row = layout.row()
         row.operator("wm.trajectory_export", text="Trajectory exporter")
         
         row = layout.row()
@@ -53,6 +56,7 @@ class TrajectoryExport(bpy.types.Operator):
     bl_label = "trajectory Exporter"
 
     def execute(self, context):
+        indigo_mod = context.scene.indigo_mod
         if context.mode != "OBJECT":
             self.report({'ERROR'}, "You must be in object mode!")
             return {'CANCELLED'}
@@ -79,6 +83,8 @@ class TrajectoryExport(bpy.types.Operator):
             else:
                 trajectory_name = "trajectory.00" + str(number_trajectory_point)
             loop = 0
+            if indigo_mod == True:
+                trajectory_array.append(' { \n')
             while loop == 0:
                 if bpy.data.objects.get(trajectory_name) is not None: 
                   #
@@ -109,9 +115,11 @@ class TrajectoryExport(bpy.types.Operator):
                     posz = "".join(posz)
                     
                     
-                    
-                    trajectory_array.append('    TRAJECTORY_POS( ' + str(number_trajectory_point) + ' , /*pos*/  ' + posx + ', ' + posy + ', ' + posz + '),\n') 
-                    
+                    if indigo_mod == False:
+                        trajectory_array.append('    TRAJECTORY_POS( ' + str(number_trajectory_point) + ' , /*pos*/  ' + posx + ', ' + posy + ', ' + posz + '),\n') 
+                    else:
+                        trajectory_array.append(' { ' + str(number_trajectory_point) + ' , /*pos*/  ' + posx + ', ' + posy + ', ' + posz + '},\n') 
+
                     bpy.context.active_object.select_set(False)
                     number_trajectory_point += 1
                     if number_trajectory_point > 99:
@@ -119,13 +127,15 @@ class TrajectoryExport(bpy.types.Operator):
                     elif number_trajectory_point > 9:
                         trajectory_name = "trajectory.0" + str(number_trajectory_point)
                     else:
-                        trajectory_name = "trajectory.00" + str(number_trajectory_point)
-                    
-                    
+                        trajectory_name = "trajectory.00" + str(number_trajectory_point)  
+                        
                 else:
                     loop = 1
-                
-            trajectory_array.append("    TRAJECTORY_END(), // tank Indigo SM64") 
+            
+            if indigo_mod == False:    
+                trajectory_array.append("    TRAJECTORY_END(), // tank Indigo SM64")
+            else : 
+                 trajectory_array.append("{-1, 0, 0, 0} // tank Indigo SM64")
             trajectory_array = "".join(trajectory_array)          
             self.report({"INFO"}, trajectory_array)
             self.report({"INFO"}, "Your trajectory, here!") 
@@ -137,6 +147,7 @@ class TrajectoryClear(bpy.types.Operator):
     bl_label = "trajectory Clear"
 
     def execute(self, context):
+        
         number_trajectory_point = 0
         
         #clear all trajectory objects
@@ -185,9 +196,18 @@ class TrajectoryClear(bpy.types.Operator):
         self.report({"INFO"}, "Clearing all trajectory objects") 
         return {'FINISHED'}
         
+        
+def init_props():
+    bpy.types.Scene.indigo_mod = bpy.props.BoolProperty(
+        name="Indigo Mod",
+        description="Export trajecory in a table",
+        default=False,
+    )        
+
 
 # Enregistrement de l'addon
 def trajectory_register():
+    init_props()
     bpy.utils.register_class(TrajectoryPanel)
     bpy.utils.register_class(TrajectorySpawn)
     bpy.utils.register_class(TrajectoryExport)
@@ -199,4 +219,5 @@ def trajectory_unregister():
     bpy.utils.unregister_class(TrajectorySpawn)
     bpy.utils.unregister_class(TrajectoryExport)
     bpy.utils.unregister_class(TrajectoryClear)
+
 
