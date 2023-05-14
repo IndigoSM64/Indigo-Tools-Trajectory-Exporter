@@ -87,8 +87,11 @@ class CutsceneTrajectoryPanel(bpy.types.Panel):
         infoBox.label(text="make a animation with location")
         infoBox.label(text="and click on the cutscene trajectory exporter button")
     
-        rom = layout.row()
+        row = layout.row()
         row.operator("wm.cutscene_trajectory_setup", text="Cutscene Trajectory Setup")
+    
+        row = layout.row()
+        row.prop(context.scene, "use_single_point")
     
         row = layout.row()
         row.operator("wm.cutscene_trajectory_export", text="Cutscene Trajectory Exporter")
@@ -131,10 +134,32 @@ class CutsceneTrajectoryExport(bpy.types.Operator):
     bl_label = "Cutscene Trajectory Exporter"
 
     def execute(self, context):
+        use_single_point = context.scene.use_single_point
+        
         if context.mode != "OBJECT":
             self.report({'ERROR'}, "You must be in object mode!")
             return {'CANCELLED'}
+        elif(use_single_point == True):
+            
+                camName = "CutsceneCamera"
+                focusName = "cutscene_focus" 
+                obj = bpy.data.objects.get(camName)
+                if obj:
+                    x, y, z = obj.location
+                    x, y, z = transforme_all_trajectory_for_sm64(x, y, z)
+                    self.report({'INFO'}, "{" + str(x) + ", " + str(y) + ", " + str(z) + "} //cam")
+    
+                obj = bpy.data.objects.get(focusName)
+                if obj:
+                    x, y, z = obj.location
+                    x, y, z = transforme_all_trajectory_for_sm64(x, y, z)
+                    self.report({'INFO'}, "{" + str(x) + ", " + str(y) + ", " + str(z) + "} //focus")
+                    
+                return{'FINISHED'}
+                    
+        
         else :
+            
            
             # Get the camera object named "CutsceneCamera"
             cam_obj = bpy.data.objects.get("CutsceneCamera")
@@ -151,6 +176,10 @@ class CutsceneTrajectoryExport(bpy.types.Operator):
 
             output_string = ["//cam:\n"]
 
+            
+           
+            
+            
             for i in range(num_keyframes):
                 if i < num_keyframes - 1:
                     # Compute number of frames between keyframes
@@ -242,9 +271,18 @@ class CutsceneTrajectoryExport(bpy.types.Operator):
             print(output_string)
             self.report({'INFO'}, output_string)
             return {'FINISHED'}
+        
+        
+def init_props():
+    bpy.types.Scene.use_single_point = bpy.props.BoolProperty(
+        name="Single Point",
+        description="Use camera's current position and focus",
+        default=False,
+    )
 
 
 def cutscene_trajectory_register():
+    init_props()
     bpy.utils.register_class(CutsceneTrajectoryPanel)
     bpy.utils.register_class(CutsceneTrajectorySetup)
     bpy.utils.register_class(CutsceneTrajectoryExport)
@@ -254,3 +292,4 @@ def cutscene_trajectory_unregister():
     bpy.utils.unregister_class(CutsceneTrajectorySetup)
     bpy.utils.unregister_class(CutsceneTrajectoryExport)
     
+
