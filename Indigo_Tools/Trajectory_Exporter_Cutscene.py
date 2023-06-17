@@ -92,6 +92,9 @@ class CutsceneTrajectoryPanel(bpy.types.Panel):
     
         row = layout.row()
         row.prop(context.scene, "use_single_point")
+
+        row = layout.row()
+        row.prop(context.scene, "indigo_mod_cutscene")
     
         row = layout.row()
         row.operator("wm.cutscene_trajectory_export", text="Cutscene Trajectory Exporter")
@@ -135,6 +138,7 @@ class CutsceneTrajectoryExport(bpy.types.Operator):
 
     def execute(self, context):
         use_single_point = context.scene.use_single_point
+        indigo_mod = context.scene.indigo_mod_cutscene
         
         if context.mode != "OBJECT":
             self.report({'ERROR'}, "You must be in object mode!")
@@ -179,34 +183,63 @@ class CutsceneTrajectoryExport(bpy.types.Operator):
             
            
             
+            if indigo_mod == True:
+                for i in range(num_keyframes):
+                    if i < num_keyframes - 1:
+                        # Compute number of frames between keyframes
+                        num_frames = location_fcurves[0].keyframe_points[i+1].co[0] - location_fcurves[0].keyframe_points[i].co[0]
+
+                        # Compute camera position at keyframe
+                        position = [location_fcurves[j].keyframe_points[i].co[1] for j in range(3)]
+
+                     
+
+                        sm64_pos_x, sm64_pos_y, sm64_pos_z = transforme_all_trajectory_for_sm64(position[0], position[1], position[2])
             
-            for i in range(num_keyframes):
-                if i < num_keyframes - 1:
-                    # Compute number of frames between keyframes
-                    num_frames = location_fcurves[0].keyframe_points[i+1].co[0] - location_fcurves[0].keyframe_points[i].co[0]
+                        # Add information to output string
+                        string_line = "{" + str(i) + "," + str(round(num_frames)) + ", " + sm64_pos_x + "," + sm64_pos_y + "," + sm64_pos_z + " },\n" 
+                        output_string.append(string_line)
+                                    
+                    else:
+                        # Compute camera position at last keyframe
+                        position = [location_fcurves[j].keyframe_points[i].co[1] for j in range(3)]
 
-                    # Compute camera position at keyframe
-                    position = [location_fcurves[j].keyframe_points[i].co[1] for j in range(3)]
+                        # Add information to output string
+                        
+                        sm64_pos_x, sm64_pos_y, sm64_pos_z = transforme_all_trajectory_for_sm64(position[0], position[1], position[2])
+                        
+                        string_line = "{-1,0, " + sm64_pos_x + "," + sm64_pos_y + "," + sm64_pos_z + " }" 
+                        output_string.append(string_line)  
+                        output_string = "".join(output_string)              
 
-                    num_frames = transforme_spline_offset(num_frames)
+            else:
+                for i in range(num_keyframes):
+                    if i < num_keyframes - 1:
+                        # Compute number of frames between keyframes
+                        num_frames = location_fcurves[0].keyframe_points[i+1].co[0] - location_fcurves[0].keyframe_points[i].co[0]
 
-                    sm64_pos_x, sm64_pos_y, sm64_pos_z = transforme_all_trajectory_for_sm64(position[0], position[1], position[2])
-        
-                    # Add information to output string
-                    string_line = "{" + str(i) + "," + str(round(num_frames)) + ",{ " + sm64_pos_x + "," + sm64_pos_y + "," + sm64_pos_z + "} },\n" 
-                    output_string.append(string_line)
-                                   
-                else:
-                    # Compute camera position at last keyframe
-                    position = [location_fcurves[j].keyframe_points[i].co[1] for j in range(3)]
+                        # Compute camera position at keyframe
+                        position = [location_fcurves[j].keyframe_points[i].co[1] for j in range(3)]
 
-                    # Add information to output string
-                    
-                    sm64_pos_x, sm64_pos_y, sm64_pos_z = transforme_all_trajectory_for_sm64(position[0], position[1], position[2])
-                    
-                    string_line = "{-1,0,{ " + sm64_pos_x + "," + sm64_pos_y + "," + sm64_pos_z + "} }" 
-                    output_string.append(string_line)  
-                    output_string = "".join(output_string)              
+                        num_frames = transforme_spline_offset(num_frames)
+
+                        sm64_pos_x, sm64_pos_y, sm64_pos_z = transforme_all_trajectory_for_sm64(position[0], position[1], position[2])
+            
+                        # Add information to output string
+                        string_line = "{" + str(i) + "," + str(round(num_frames)) + ",{ " + sm64_pos_x + "," + sm64_pos_y + "," + sm64_pos_z + "} },\n" 
+                        output_string.append(string_line)
+                                    
+                    else:
+                        # Compute camera position at last keyframe
+                        position = [location_fcurves[j].keyframe_points[i].co[1] for j in range(3)]
+
+                        # Add information to output string
+                        
+                        sm64_pos_x, sm64_pos_y, sm64_pos_z = transforme_all_trajectory_for_sm64(position[0], position[1], position[2])
+                        
+                        string_line = "{-1,0,{ " + sm64_pos_x + "," + sm64_pos_y + "," + sm64_pos_z + "} }" 
+                        output_string.append(string_line)  
+                        output_string = "".join(output_string)              
 
             # Print output string for debugging
             
@@ -228,33 +261,62 @@ class CutsceneTrajectoryExport(bpy.types.Operator):
 
             output_focus_string = ["//focus:\n"]
 
-            for i in range(num_keyframes):
-                if i < num_keyframes - 1:
-                    # Compute number of frames between keyframes
-                    num_frames = location_fcurves[0].keyframe_points[i+1].co[0] - location_fcurves[0].keyframe_points[i].co[0]
+            if indigo_mod == True:
+                for i in range(num_keyframes):
+                    if i < num_keyframes - 1:
+                        # Compute number of frames between keyframes
+                        num_frames = location_fcurves[0].keyframe_points[i+1].co[0] - location_fcurves[0].keyframe_points[i].co[0]
 
-                    # Compute empty object position at keyframe
-                    position = [location_fcurves[j].keyframe_points[i].co[1] for j in range(3)]
+                        # Compute empty object position at keyframe
+                        position = [location_fcurves[j].keyframe_points[i].co[1] for j in range(3)]
 
-                    sm64_pos_x, sm64_pos_y, sm64_pos_z = transforme_all_trajectory_for_sm64(position[0], position[1], position[2])
+                        sm64_pos_x, sm64_pos_y, sm64_pos_z = transforme_all_trajectory_for_sm64(position[0], position[1], position[2])
 
-                    num_frames = transforme_spline_offset(num_frames)
-                    
-                    # Add information to output string
-                    string_line = "{" + str(i) + "," + str(round(num_frames)) + ",{ " + sm64_pos_x + "," + sm64_pos_y + "," + sm64_pos_z + "} },\n" 
-                    output_focus_string.append(string_line)
-                    
-                     
-                else:
-                    # Compute empty object position at last keyframe
-                    position = [location_fcurves[j].keyframe_points[i].co[1] for j in range(3)]
+                        
+                        # Add information to output string
+                        string_line = "{" + str(i) + "," + str(round(num_frames)) + "," + sm64_pos_x + "," + sm64_pos_y + "," + sm64_pos_z + "} ,\n" 
+                        output_focus_string.append(string_line)
+                        
+                        
+                    else:
+                        # Compute empty object position at last keyframe
+                        position = [location_fcurves[j].keyframe_points[i].co[1] for j in range(3)]
 
-                    sm64_pos_x, sm64_pos_y, sm64_pos_z = transforme_all_trajectory_for_sm64(position[0], position[1], position[2])
+                        sm64_pos_x, sm64_pos_y, sm64_pos_z = transforme_all_trajectory_for_sm64(position[0], position[1], position[2])
 
-                    # Add information to output string
-                    string_line = "{-1,0,{ " + sm64_pos_x  + "," + sm64_pos_y + "," + sm64_pos_z + "} }\n" 
-                    output_focus_string.append(string_line)
-                    output_focus_string = "".join(output_focus_string)   
+                        # Add information to output string
+                        string_line = "{-1,0, " + sm64_pos_x  + "," + sm64_pos_y + "," + sm64_pos_z + " }\n" 
+                        output_focus_string.append(string_line)
+                        output_focus_string = "".join(output_focus_string)   
+
+            else:
+                for i in range(num_keyframes):
+                    if i < num_keyframes - 1:
+                        # Compute number of frames between keyframes
+                        num_frames = location_fcurves[0].keyframe_points[i+1].co[0] - location_fcurves[0].keyframe_points[i].co[0]
+
+                        # Compute empty object position at keyframe
+                        position = [location_fcurves[j].keyframe_points[i].co[1] for j in range(3)]
+
+                        sm64_pos_x, sm64_pos_y, sm64_pos_z = transforme_all_trajectory_for_sm64(position[0], position[1], position[2])
+
+                        num_frames = transforme_spline_offset(num_frames)
+                        
+                        # Add information to output string
+                        string_line = "{" + str(i) + "," + str(round(num_frames)) + ",{ " + sm64_pos_x + "," + sm64_pos_y + "," + sm64_pos_z + "} },\n" 
+                        output_focus_string.append(string_line)
+                        
+                        
+                    else:
+                        # Compute empty object position at last keyframe
+                        position = [location_fcurves[j].keyframe_points[i].co[1] for j in range(3)]
+
+                        sm64_pos_x, sm64_pos_y, sm64_pos_z = transforme_all_trajectory_for_sm64(position[0], position[1], position[2])
+
+                        # Add information to output string
+                        string_line = "{-1,0,{ " + sm64_pos_x  + "," + sm64_pos_y + "," + sm64_pos_z + "} }\n" 
+                        output_focus_string.append(string_line)
+                        output_focus_string = "".join(output_focus_string)   
                     
             # Print output string for debugging
             print(output_focus_string)
@@ -273,12 +335,20 @@ class CutsceneTrajectoryExport(bpy.types.Operator):
             return {'FINISHED'}
         
         
+
 def init_props():
     bpy.types.Scene.use_single_point = bpy.props.BoolProperty(
         name="Single Point",
         description="Use camera's current position and focus",
         default=False,
     )
+    bpy.types.Scene.indigo_mod_cutscene = bpy.props.BoolProperty(
+        name="Indigo Mod",
+        description="Export cutscene trajecory in a table",
+        default=False,
+    )
+
+
 
 
 def cutscene_trajectory_register():
@@ -291,5 +361,7 @@ def cutscene_trajectory_unregister():
     bpy.utils.unregister_class(CutsceneTrajectoryPanel)
     bpy.utils.unregister_class(CutsceneTrajectorySetup)
     bpy.utils.unregister_class(CutsceneTrajectoryExport)
+    
+
     
 
